@@ -1,0 +1,23 @@
+# Vagrantfile
+Vagrant.configure("2") do |config|
+    # Use the Ubuntu 20.04 base box
+    config.vm.box = "ubuntu/focal64"
+
+    config.vm.provider "virtualbox" do |vb|
+        vb.name = "jenkins-tf"
+        vb.memory = 4096 
+        vb.cpus = 2
+      end
+  
+    # Forward ports for Jenkins web UI
+    config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+    # Use a local adapter for network connectivity with a static IP address
+    config.vm.hostname = "jenkins-tf"
+    config.vm.network :private_network, ip: "192.168.56.200"
+    config.vm.network "forwarded_port", guest: 22, host: "2810"
+
+  
+    # Provision the VM with Jenkins using a shell script
+    config.vm.provision "shell", path: "provision.sh"
+  end
