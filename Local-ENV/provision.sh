@@ -36,6 +36,7 @@ docker run -d  --name sonar -p 9000:9000 sonarqube:lts-community
 
 # Installing Kubectl
 #!/bin/bash
+
 sudo apt update
 sudo apt install curl -y
 sudo curl -LO "https://dl.k8s.io/release/v1.28.4/bin/linux/amd64/kubectl"

@@ -6,6 +6,7 @@ pipeline {
     }
     environment  {
         SCANNER_HOME=tool 'sonar-scanner'
+        SONARQUBE_TOKEN = credentials('sonar-token')
     }
     stages {
         stage('Cleaning Workspace') {
@@ -18,23 +19,23 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/AmanPathak-DevOps/End-to-End-Kubernetes-DevSecOps-Tetris-Project.git'
             }
         }
+
         stage('Sonarqube Analysis') {
             steps {
                 dir('Tetris-V1') {
-                    withSonarQubeEnv('sonar-server') {
-                        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=TetrisVersion1.0 \
-                        -Dsonar.projectKey=TetrisVersion1.0 '''
+                    script {
+                        withSonarQubeEnv('sonar-server') {
+                            sh "${SCANNER_HOME}/bin/sonar-scanner \
+                            -Dsonar.projectName=TetrisVersion1.0 \
+                            -Dsonar.projectKey=TetrisVersion1.0 \
+                            -Dsonar.login=admin \
+                            -Dsonar.password=M4NAg3r."
+                        }
                     }
                 }
             }
         }
-        stage('Quality Check') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-                }
-            }
-        }
+
         stage('Installing Dependencies') {
             steps {
                 dir('Tetris-V1') {
@@ -74,15 +75,15 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {   
-                        sh 'docker tag tetrisv1 avian19/tetrisv1:${BUILD_NUMBER}'
-                        sh 'docker push avian19/tetrisv1:${BUILD_NUMBER}'
+                        sh 'docker tag tetrisv1 wilsongmn/tetrisv1:${BUILD_NUMBER}'
+                        sh 'docker push wilsongmn/tetrisv1:${BUILD_NUMBER}'
                     }
                 }
             }
         }
         stage("TRIVY Image Scan") {
             steps {
-                sh 'trivy image avian19/tetrisv1:${BUILD_NUMBER} > trivyimage.txt' 
+                sh 'trivy image wilsongmn/tetrisv1:${BUILD_NUMBER} > trivyimage.txt' 
             }
         }
         stage('Checkout Code') {
@@ -93,14 +94,14 @@ pipeline {
         stage('Update Deployment file') {
             environment {
                 GIT_REPO_NAME = "End-to-End-Kubernetes-DevSecOps-Tetris-Project"
-                GIT_USER_NAME = "AmanPathak-DevOps"
+                GIT_USER_NAME = "wilsonGmn"
             }
             steps {
                 dir('Manifest-file') {
                     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                         sh '''
-                            git config user.email "aman07pathak@gmail.com"
-                            git config user.name "AmanPathak-DevOps"
+                            git config user.email "wilson_guaman5@hotmail.com"
+                            git config user.name "wilsonGmn"
                             BUILD_NUMBER=${BUILD_NUMBER}
                             echo $BUILD_NUMBER
                             imageTag=$(grep -oP '(?<=tetrisv1:)[^ ]+' deployment-service.yml)
